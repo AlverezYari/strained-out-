@@ -1,0 +1,56 @@
+version: '3'
+
+tasks:
+  dev:
+    desc: Run frontend and backend in parallel
+    deps: [frontend:install]
+    cmds:
+      - task backend:run &
+      - task frontend:dev
+  build:
+    desc: Build Go backend and Vue frontend
+    deps: [frontend:install]
+    cmds:
+      - task backend:build
+      - task frontend:build
+  lint:
+    desc: Lint Go and frontend code
+    deps: [frontend:install]
+    cmds:
+      - cd backend && go vet ./...
+      - cd frontend && npm run lint
+  test:
+    desc: Run backend and frontend tests
+    deps: [frontend:install]
+    cmds:
+      - cd backend && go test ./...
+      - cd frontend && npm run test
+  docker:
+    desc: Build Docker image for full application
+    deps: [build]
+    cmds:
+      - docker build -t imperial-app .
+
+  backend:run:
+    internal: true
+    cmds:
+      - cd backend && go run ./cmd/server
+  backend:build:
+    internal: true
+    cmds:
+      - cd backend && go build -o server ./cmd/server
+
+  frontend:install:
+    internal: true
+    status:
+      - test -d frontend/node_modules
+    cmds:
+      - cd frontend && npm install
+  frontend:dev:
+    internal: true
+    cmds:
+      - cd frontend && npm run dev
+  frontend:build:
+    internal: true
+    cmds:
+      - cd frontend && npm run build
